@@ -81,12 +81,4 @@ locals {
     : local.deployer_arn
   )
 
-  oss_data_access_principals = distinct(compact(concat(
-    [
-      aws_iam_role.knowledge_base.arn,
-      local.deployer_arn,
-      local.deployer_iam_role_arn,
-    ],
-    var.additional_opensearch_data_access_principal_arns,
-  )))
 }

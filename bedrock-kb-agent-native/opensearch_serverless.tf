@@ -79,7 +79,14 @@ resource "aws_opensearchserverless_access_policy" "bedrock_kb" {
         ResourceType = "index"
       },
     ]
-    Principal = local.oss_data_access_principals
+    Principal = distinct(compact(concat(
+      [
+        aws_iam_role.knowledge_base.arn,
+        local.deployer_arn,
+        local.deployer_iam_role_arn,
+      ],
+      var.additional_opensearch_data_access_principal_arns,
+    )))
   }])
 
   depends_on = [

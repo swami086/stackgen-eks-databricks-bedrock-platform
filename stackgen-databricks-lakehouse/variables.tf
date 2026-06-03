@@ -50,8 +50,3 @@ variable "name_prefix" {
   }
 }
 
-variable "ensure_storage_credential_self_assume" {
-  description = "Update the storage credential IAM role trust policy to include Unity Catalog self-assume before creating the external location."
-  type        = bool
-  default     = true
-}
