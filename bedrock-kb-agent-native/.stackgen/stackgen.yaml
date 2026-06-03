@@ -6,7 +6,7 @@ representation:
     icon: "aws-bedrock"
   node:
     label:
-      template: "Bedrock — ${kb_name}"
+      static: "Bedrock KB + Agent"
 
 variables:
   kb_name:
