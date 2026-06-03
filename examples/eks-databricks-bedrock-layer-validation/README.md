@@ -19,48 +19,189 @@ This stack proves that four planes can be composed **deterministically** from a 
 2. **Lakehouse analytics** — Databricks reads/writes the medallion S3 bucket via Unity Catalog.  
 3. **Workshop / CI validation** — repeatable create → verify → destroy cycles with policy gates and snapshots.
 
-## Architecture at a glance
+---
+
+## Architecture diagrams
+
+### 1. Platform context
+
+StackGen manages IaC across four planes.
 
 ```mermaid
 flowchart TB
-  subgraph control["StackGen"]
-    PLAN["Plan / Apply / Destroy"]
-    SNAP["Snapshots & policy gate"]
+  subgraph stackgen["StackGen control plane"]
+    SG_UI["Topology / IaC UI"]
+    SG_POL["Policy engine · 0 violations target"]
+    SG_PLAN["OpenTofu plan / apply / destroy"]
+    SG_CAT["Module catalog"]
+    SG_UI --> SG_POL --> SG_PLAN
+    SG_CAT --> SG_UI
+  end
+
+  subgraph users["Users"]
+    WEB["Web / API clients"]
+    ANALYSTS["Data scientists"]
+    BIZ["Business users"]
+  end
+
+  subgraph eks_plane["L2 — EKS application plane"]
+    INGRESS["Helm Ingress"]
+    APPS["Helm Workloads"]
+    INGRESS --> APPS
+  end
+
+  subgraph data_plane["L3 — Databricks data plane"]
+    DBX_UC["Unity Catalog"]
+    DBX_SPARK["Spark / Delta on S3"]
+    DBX_UC --> DBX_SPARK
+  end
+
+  subgraph ai_plane["L4 — Amazon Bedrock AI plane"]
+    BEDROCK["bedrock-kb-agent-native"]
+    FM["Claude + Titan Embed"]
+    BEDROCK --> FM
+  end
+
+  subgraph aws_core["L1 — AWS foundation"]
+    NET["VPC · NAT · endpoints"]
+    STORE["S3 medallion · docs · mlflow"]
+    IAM["IAM · IRSA · UC role"]
+    NET --> STORE
+  end
+
+  WEB & ANALYSTS & BIZ --> INGRESS
+  APPS -->|InvokeAgent| BEDROCK
+  APPS --> DBX_SPARK
+  ANALYSTS --> DBX_UC
+  BEDROCK --> STORE
+  DBX_SPARK --> STORE
+  eks_plane & data_plane & ai_plane --> aws_core
+  stackgen -.->|manages| aws_core & eks_plane & data_plane & ai_plane
+```
+
+### 2. Full infrastructure topology (Terraform)
+
+Post-apply resource graph. Vector store = **OpenSearch Serverless** (`bedrock-kb-agent-native` v1.0.14+).
+
+```mermaid
+flowchart TB
+  subgraph tfvars["Inputs"]
+    VAR_REGION["var.region"]
+    VAR_DBX["var.databricks_host / token"]
   end
 
   subgraph L1["L1 aws_core"]
-    VPC["VPC + NAT + endpoints"]
-    S3["S3: medallion · docs · mlflow"]
-    IAM["IAM: platform + IRSA + UC role"]
+    VPC["aws_vpc · 10.30.0.0/16"]
+    NAT["NAT + EIP"]
+    VPCE["VPC endpoints · s3 ddb ecr sts eks bedrock"]
+    S3L["S3 medallion + KMS"]
+    S3K["S3 knowledge docs + KMS"]
+    S3M["S3 mlflow + KMS"]
+    IAM_EKS["platform_iam_role"]
+    IAM_IRSA["platform_irsa_role"]
+    IAM_UC["databricks_uc_role"]
+    DDB["DynamoDB metadata"]
+    R53["Route53 private zone"]
+    VPC --> NAT & VPCE
   end
 
   subgraph L2["L2 eks_plane"]
-    EKS["EKS private API"]
-    NG["Node groups"]
-    ADDON["Addons: vpc-cni · pod-identity-agent"]
+    EKS["aws_eks · platform_eks · private API"]
+    NG1["node group primary"]
+    NG2["node group secondary"]
+    NG3["node group tertiary"]
+    CNI["addon vpc-cni"]
+    PIA["addon eks-pod-identity-agent"]
+    EKS --> NG1 & NG2 & NG3 & CNI & PIA
   end
 
   subgraph L3["L3 data_plane"]
-    DBX["Databricks UC external location"]
+    DBX["stackgen-databricks-lakehouse"]
+    DBX --> IAM_UC & S3L & VAR_DBX
   end
 
   subgraph L4["L4 ai_plane"]
-    OSS["OpenSearch Serverless VECTORSEARCH"]
-    KB["Bedrock Knowledge Base"]
-    AGT["Bedrock Agent"]
+    FM_I["data FM Claude"]
+    FM_E["data FM Titan embed"]
+    subgraph bedrock["bedrock-kb-agent-native v1.0.14+"]
+      OSS_POL["OSS security + data policies"]
+      OSS_COL["OSS VECTORSEARCH collection"]
+      OSS_IDX["opensearch_index"]
+      KB_ROLE["KB IAM role"]
+      KB["Knowledge Base"]
+      DS["S3 data source"]
+      AGT["Agent + alias"]
+      OSS_POL --> OSS_COL --> OSS_IDX --> KB
+      KB_ROLE --> KB --> DS
+      KB --> AGT
+    end
+    S3K --> DS
+    FM_I & FM_E --> bedrock
+    VAR_REGION --> bedrock
   end
 
-  control --> L1 & L2 & L3 & L4
-  L2 --> L1
-  L3 --> L1
-  L4 --> L1
-  S3 --> KB
-  OSS --> KB --> AGT
-  S3 --> DBX
-  EKS -.->|InvokeAgent| AGT
+  VPC --> EKS
+  IAM_EKS --> EKS & NG1 & NG2 & NG3
+  IAM_IRSA -.->|Pod Identity| EKS
 ```
 
-Full diagrams: [`diagrams/`](diagrams/) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+### 3. Network layout
+
+Private EKS API; egress via NAT; AWS APIs via VPC endpoints.
+
+```mermaid
+flowchart LR
+  subgraph internet["Internet"]
+    USERS["Users"]
+  end
+
+  subgraph vpc["VPC 10.30.0.0/16"]
+    subgraph pub["Public 10.30.0.0/24"]
+      IGW["Internet Gateway"]
+      NAT["NAT Gateway + EIP"]
+      IGW --- NAT
+    end
+
+    subgraph priv_a["Private 10.30.1.0/24"]
+      EKS_A["EKS nodes / CP ENIs"]
+    end
+
+    subgraph priv_b["Private 10.30.2.0/24"]
+      EKS_B["EKS nodes"]
+    end
+
+    VPCE["VPC endpoints · s3 · ddb · ecr · sts · eks · bedrock"]
+  end
+
+  USERS -.->|443 via Ingress| EKS_A
+  pub --> NAT
+  NAT --> priv_a & priv_b
+  priv_a & priv_b --> VPCE
+  EKS_A & EKS_B -.->|AWS APIs| VPCE
+```
+
+### 4. RAG request flow (runtime)
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant EKS as EKS workload
+  participant Agent as Bedrock Agent
+  participant KB as Knowledge Base
+  participant OSS as OpenSearch Serverless
+  participant S3 as S3 documents
+
+  User->>EKS: HTTPS request
+  EKS->>Agent: InvokeAgent
+  Agent->>KB: Retrieve
+  KB->>OSS: Vector search
+  KB->>S3: Fetch chunks
+  Agent->>User: Response
+```
+
+Editable source: [`diagrams/`](diagrams/) (`.mmd` files) · Written guide: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+
+---
 
 ## Module versions (pin before apply)
 
@@ -73,36 +214,27 @@ Source: this repo (`main` branch or tagged release).
 
 ## Prerequisites
 
-1. **StackGen** project with an environment profile (e.g. `swami_env`) and S3 remote state.  
-2. **AWS** — Bedrock foundation models enabled; quota for EKS, OSS, and Bedrock Agent in target region (validated in **us-east-1**).  
-3. **Databricks** — workspace URL and token stored as **environment secrets** (`databricks_host`, `databricks_token`).  
-4. **Catalog upload** — both custom modules uploaded to the StackGen project and bound on the canvas (not legacy template-only bindings).
+1. **StackGen** project with an environment profile and S3 remote state.  
+2. **AWS** — Bedrock foundation models enabled in target region (validated in **us-east-1**).  
+3. **Databricks** — workspace URL and token as environment secrets.  
+4. **Catalog upload** — both custom modules uploaded and bound on the canvas.
 
 ## Quick start
 
-### Create
-
-Follow **[docs/CREATE.md](docs/CREATE.md)** — snapshot → violations → plan → apply → verify.
-
-### Destroy
-
-Follow **[docs/DESTROY.md](docs/DESTROY.md)** — destroy plan → empty S3 or `force_destroy` → destroy → confirm state empty.
-
-### Every run
-
-Use **[docs/CHECKLIST.md](docs/CHECKLIST.md)** before Plan, Apply, or Destroy.
-
-### If something fails
-
-Read **[docs/GOTCHAS.md](docs/GOTCHAS.md)** — each item maps a real failure from workshop validation to a permanent fix.
+| Action | Doc |
+|--------|-----|
+| **Create** | [docs/CREATE.md](docs/CREATE.md) |
+| **Destroy** | [docs/DESTROY.md](docs/DESTROY.md) |
+| **Every run** | [docs/CHECKLIST.md](docs/CHECKLIST.md) |
+| **Failures** | [docs/GOTCHAS.md](docs/GOTCHAS.md) |
 
 ## What is *not* in Terraform state
 
 | Component | Behavior |
 |-----------|----------|
-| **Helm pack** (Agentic workload group) | On canvas; deploy separately after EKS is ACTIVE |
-| **Legacy managed OpenSearch** (`kb-opensearch`) | Optional on canvas; Bedrock uses **Serverless** — remove to save cost |
-| **In-cluster kubectl** | Private EKS API — access from inside VPC only |
+| **Helm pack** | On canvas; deploy separately after EKS is ACTIVE |
+| **Legacy managed OpenSearch** | Optional; Bedrock uses **Serverless** |
+| **kubectl from laptop** | Private EKS API — VPC access required |
 
 ## Related links
 
