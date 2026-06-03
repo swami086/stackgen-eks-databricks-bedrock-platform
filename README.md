@@ -1,77 +1,58 @@
 # stackgen-eks-databricks-bedrock-platform
 
-**A production-style AWS reference platform** for running **Kubernetes applications**, a **Databricks lakehouse**, and **generative AI (RAG)** on a single, repeatable StackGen topology — with Terraform modules, runbooks, and workshop-hardened create/destroy guidance.
+Deploy a complete AWS platform for **Kubernetes apps**, **Databricks analytics**, and **Bedrock AI (RAG)** — from one [StackGen](https://stackgen.com) topology, with Terraform modules and step-by-step runbooks.
 
 ---
 
-## About this project
+## Overview
 
-Organizations often build **EKS**, **Databricks**, and **Bedrock** in separate silos: different teams, different IaC repos, and no shared networking or identity model. That makes it hard to answer practical questions like *“Can our app on EKS call a Bedrock Agent that retrieves from documents in S3 while analysts query the same data in Databricks?”*
+This repository helps you stand up a reference stack on AWS without wiring EKS, Databricks, and Bedrock in three separate projects.
 
-This repository is the **answer and the blueprint** for that pattern. It packages everything needed to stand up — and safely tear down — a **four-layer AWS platform** managed through [StackGen](https://stackgen.com):
+You get a private EKS cluster for applications, a Databricks lakehouse on S3, and a Bedrock Knowledge Base + Agent that answers questions from your documents. Everything shares the same VPC, IAM model, and storage — so an app on EKS can call the agent while analysts query the same data in Databricks.
 
-| Layer | Plane | Role |
-|-------|-------|------|
-| **L1** | `aws_core` | Shared foundation — VPC, NAT, private subnets, VPC endpoints, KMS-encrypted S3 buckets, IAM, DNS |
-| **L2** | `eks_plane` | Private **Amazon EKS** cluster for application and agent workloads |
-| **L3** | `data_plane` | **Databricks Unity Catalog** external location on a medallion S3 bucket |
-| **L4** | `ai_plane` | **Amazon Bedrock** Knowledge Base + Agent with **OpenSearch Serverless** vectors |
+The stack is managed with **StackGen** (visual topology + OpenTofu apply) and maintained as **Terraform modules** you can reuse in your own projects. It includes create/destroy guides and a checklist built from real deployment failures — so the second run goes smoother than the first.
 
-The reference appstack is named **`eks-databricks-bedrock-layer-validation`**. It was built and tested layer-by-layer (L1 → L4) so each plane can be validated independently before the full stack is applied.
+**Reference appstack:** `eks-databricks-bedrock-layer-validation`
 
-### What problem it solves
+---
 
-- **Unified data + AI path** — Knowledge documents live in S3; Bedrock indexes them into a vector store; Databricks reads the same medallion bucket for analytics; EKS hosts clients that invoke the agent.
-- **Private-by-default AWS** — EKS API is private; nodes egress via NAT; AWS service calls use VPC endpoints (including Bedrock runtime APIs).
-- **IaC you can operationalize** — Not just modules: documented **create**, **destroy**, **checklist**, **configuration**, and **gotchas** from real apply failures (Pod Identity, OSS index ordering, Databricks trust policies, etc.).
-- **StackGen-native** — Custom modules register in the StackGen catalog; topology, policy gate, snapshots, and per-environment variables live in StackGen — not scattered shell scripts.
+## What you can build
 
-### Primary use cases
+- **Ask questions of your docs (RAG)** — Bedrock Agent retrieves from S3 via OpenSearch Serverless vectors  
+- **Run analytics on the same data** — Databricks Unity Catalog points at a shared medallion bucket  
+- **Host the app on Kubernetes** — Private EKS cluster with optional Helm workloads  
+- **Repeat deploys safely** — Snapshots, policy checks, and documented gotchas for workshops or CI  
 
-1. **Interactive RAG** — A service on EKS (or elsewhere) calls a Bedrock Agent; the agent retrieves context from a Knowledge Base backed by OpenSearch Serverless and documents in S3.
-2. **Lakehouse analytics** — Data engineers use Databricks SQL/Spark against the same medallion bucket registered as a Unity Catalog external location.
-3. **Platform workshops & CI** — Repeatable create → verify → destroy cycles with StackGen snapshots, violation checks, and pinned module versions.
-4. **Module reuse** — Import `bedrock-kb-agent-native` or `stackgen-databricks-lakehouse` into your own StackGen project without copying the full topology.
+---
 
-### What this repository contains
+## What's in this repo
 
-| Contents | Description |
-|----------|-------------|
-| **`bedrock-kb-agent-native/`** | Terraform module — Bedrock KB, Agent, OSS collection + vector index, IAM (v1.0.14+) |
-| **`stackgen-databricks-lakehouse/`** | Terraform module — UC storage credential, external location, SQL endpoint (v1.0.5+) |
-| **`examples/eks-databricks-bedrock-layer-validation/`** | Full reference docs: create, destroy, checklist, configuration, architecture diagrams |
-| **Runbooks & gotchas** | Workshop-validated steps so the *second* deploy does not repeat the *first* deploy’s failures |
+| Path | Description |
+|------|-------------|
+| [`bedrock-kb-agent-native/`](bedrock-kb-agent-native/) | Bedrock KB, Agent, OpenSearch Serverless, IAM |
+| [`stackgen-databricks-lakehouse/`](stackgen-databricks-lakehouse/) | Databricks external location + storage credential |
+| [`examples/eks-databricks-bedrock-layer-validation/`](examples/eks-databricks-bedrock-layer-validation/) | Full docs, diagrams, config templates |
 
-This is **not** a managed SaaS product. It is an **open reference implementation**: you bring your AWS account, Databricks workspace, StackGen project, and credentials ([CONFIGURATION.md](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md)).
+**Docs you'll use most:**
 
-### How it works (high level)
+| | |
+|---|---|
+| [Configure credentials & env vars](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md) | Databricks PAT, AWS runner, StackGen profile |
+| [Create the stack](examples/eks-databricks-bedrock-layer-validation/docs/CREATE.md) | First-time deploy |
+| [Destroy the stack](examples/eks-databricks-bedrock-layer-validation/docs/DESTROY.md) | Clean teardown |
+| [Pre-flight checklist](examples/eks-databricks-bedrock-layer-validation/docs/CHECKLIST.md) | Before every plan/apply |
+| [Known gotchas](examples/eks-databricks-bedrock-layer-validation/docs/GOTCHAS.md) | Fixes for common apply failures |
 
-1. **Design** the topology on the StackGen canvas (or clone the reference appstack).
-2. **Upload** custom modules from this repo to your StackGen project catalog.
-3. **Configure** environment profile variables (`databricks_host`, `databricks_token`, `region`, optional bucket names) and S3 remote state.
-4. **Gate** each change: snapshot → violations = 0 → plan → apply → verify → plan again.
-5. **Destroy** safely when done: empty S3 buckets (or `force_destroy` in dev), destroy plan, teardown.
+---
 
-Detailed steps: [CREATE.md](examples/eks-databricks-bedrock-layer-validation/docs/CREATE.md) · [DESTROY.md](examples/eks-databricks-bedrock-layer-validation/docs/DESTROY.md)
+## Getting started
 
-### Who this is for
+1. **Fork or clone** this repo and upload the custom modules to your StackGen project ([instructions in CREATE.md](examples/eks-databricks-bedrock-layer-validation/docs/CREATE.md)).
+2. **Set secrets** on your StackGen environment profile — at minimum `databricks_host`, `databricks_token`, and `region` ([CONFIGURATION.md](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md)).
+3. **Run the gate sequence** — snapshot → violations = 0 → plan → apply → verify ([CHECKLIST.md](examples/eks-databricks-bedrock-layer-validation/docs/CHECKLIST.md)).
+4. **Tear down when done** — empty S3 buckets, destroy plan, destroy ([DESTROY.md](examples/eks-databricks-bedrock-layer-validation/docs/DESTROY.md)).
 
-- **Platform / DevOps engineers** wiring EKS + data + AI on AWS with StackGen  
-- **Solutions architects** evaluating a Bedrock RAG + lakehouse pattern on private VPC  
-- **Workshop facilitators** needing a reproducible stack with documented failure modes  
-- **Module consumers** who only need Bedrock KB/Agent or Databricks UC wiring in isolation  
-
-### Validated environment (example)
-
-| Item | Example value |
-|------|----------------|
-| StackGen project | `workshop-dharani` |
-| Environment profile | `swami_env` |
-| AWS region | `us-east-1` |
-| EKS cluster | `platform_eks` (private API) |
-| Vector store | OpenSearch Serverless (not legacy managed OpenSearch) |
-
-Your names and account IDs will differ; the docs use placeholders where needed.
+You need an AWS account with Bedrock model access, a Databricks workspace, and a StackGen project with remote state configured.
 
 ---
 
@@ -205,20 +186,9 @@ flowchart LR
 Source files (editable): [`examples/eks-databricks-bedrock-layer-validation/diagrams/`](examples/eks-databricks-bedrock-layer-validation/diagrams/)  
 Deep dive: [`docs/ARCHITECTURE.md`](examples/eks-databricks-bedrock-layer-validation/docs/ARCHITECTURE.md)
 
+The stack is built in four layers: shared AWS networking and storage (L1), EKS (L2), Databricks (L3), and Bedrock (L4). See the example README for a resource-level breakdown.
+
 ---
-
-## Reference architecture docs
-
-| Item | Location |
-|------|----------|
-| **Start here** | [`examples/eks-databricks-bedrock-layer-validation/README.md`](examples/eks-databricks-bedrock-layer-validation/README.md) |
-| Create the stack | [`docs/CREATE.md`](examples/eks-databricks-bedrock-layer-validation/docs/CREATE.md) |
-| Destroy the stack | [`docs/DESTROY.md`](examples/eks-databricks-bedrock-layer-validation/docs/DESTROY.md) |
-| Pre-flight checklist | [`docs/CHECKLIST.md`](examples/eks-databricks-bedrock-layer-validation/docs/CHECKLIST.md) |
-| **Credentials & env vars** | [`docs/CONFIGURATION.md`](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md) |
-| Known gotchas | [`docs/GOTCHAS.md`](examples/eks-databricks-bedrock-layer-validation/docs/GOTCHAS.md) |
-
-**Example StackGen project:** `workshop-dharani`
 
 ## Custom modules
 
@@ -257,12 +227,11 @@ stackgen-eks-databricks-bedrock-platform/
 
 ## Requirements
 
-- AWS account with Bedrock model access (Claude + Titan Embed) in your region  
+- AWS account with Bedrock enabled (Claude + Titan Embed in your region)  
 - StackGen project with OpenTofu runner and S3 remote state  
-- Databricks workspace + personal access token for Unity Catalog resources  
-- IAM permissions for EKS, VPC, S3, OpenSearch Serverless, Bedrock, IAM  
+- Databricks workspace URL and personal access token  
 
-**Configure all secrets and variables before first apply:** [CONFIGURATION.md](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md)
+See [CONFIGURATION.md](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md) for the full list of environment variables and credentials.
 
 ## License
 

@@ -1,23 +1,27 @@
 # EKS + Databricks + Bedrock — Reference Architecture
 
-A **layer-validated** AWS reference stack for interactive RAG and lakehouse analytics. Infrastructure is defined on a [StackGen](https://stackgen.com) canvas and applied with OpenTofu; reusable logic lives in this repository’s custom modules.
+Deploy and tear down a full AWS stack for **Kubernetes**, **Databricks**, and **Bedrock RAG** using StackGen and the modules in this repo.
 
-## What this project is
+## Overview
 
-This stack proves that four planes can be composed **deterministically** from a single topology:
+This example appstack (`eks-databricks-bedrock-layer-validation`) shows how to run:
 
-| Layer | Plane | What gets created |
-|-------|-------|-------------------|
-| **L1** | `aws_core` | VPC `10.30.0.0/16`, private/public subnets, NAT, VPC endpoints (S3, DynamoDB, ECR, STS, EKS, Bedrock), three KMS-encrypted S3 buckets, DynamoDB, Route53 private zone, IAM roles |
-| **L2** | `eks_plane` | Private EKS cluster `platform_eks`, three `t3.medium` node groups, `vpc-cni` + `eks-pod-identity-agent` addons; optional Helm workload pack (separate from core Terraform state) |
-| **L3** | `data_plane` | Databricks storage credential, external location on medallion bucket, SQL warehouse endpoint |
-| **L4** | `ai_plane` | Bedrock Knowledge Base + Agent, **OpenSearch Serverless** vector collection, S3 document source, embedding + inference models |
+- A **private EKS cluster** for your applications  
+- A **Databricks lakehouse** on a shared S3 medallion bucket  
+- A **Bedrock Knowledge Base + Agent** that answers questions from documents in S3  
 
-**Primary use cases**
+All three share the same VPC and storage. The stack was tested layer-by-layer in workshops so you can validate networking, data, and AI independently before a full apply.
 
-1. **Interactive RAG** — EKS (or external) clients invoke a Bedrock Agent backed by a Knowledge Base.  
-2. **Lakehouse analytics** — Databricks reads/writes the medallion S3 bucket via Unity Catalog.  
-3. **Workshop / CI validation** — repeatable create → verify → destroy cycles with policy gates and snapshots.
+## What gets created
+
+| Layer | What gets created |
+|-------|-------------------|
+| **L1** | VPC, NAT, subnets, VPC endpoints, S3 buckets, IAM |
+| **L2** | Private EKS cluster, node groups, addons |
+| **L3** | Databricks external location + storage credential |
+| **L4** | Bedrock KB + Agent, OpenSearch Serverless |
+
+**Use it for:** RAG apps, lakehouse analytics, or workshop/CI validation.
 
 ---
 
