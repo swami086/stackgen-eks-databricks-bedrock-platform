@@ -1,4 +1,4 @@
-version: "1.0.10"
+version: "1.0.11"
 
 representation:
   side_panel:
@@ -92,6 +92,16 @@ variables:
     description: "Tags applied to Bedrock and IAM resources (ManagedBy and Module are merged automatically)."
     type: "map(string)"
     ui_control: "dictionary"
+  embedding_vector_dimension:
+    label: "Embedding Vector Dimension"
+    description: "knn_vector dimension for the Serverless index (Titan Embed Text v2 = 1024)."
+    type: "number"
+    ui_control: "text"
+  additional_opensearch_data_access_principal_arns:
+    label: "Extra OSS Data Access Principals"
+    description: "Additional IAM ARNs for OpenSearch Serverless data policy (optional)."
+    type: "list(string)"
+    ui_control: "text"
 
 layouts:
   - name: default

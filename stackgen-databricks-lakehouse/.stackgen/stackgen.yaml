@@ -1,4 +1,4 @@
-version: "1.0.3"
+version: "1.0.4"
 
 representation:
   side_panel:
@@ -42,6 +42,11 @@ variables:
     description: "Prefix for SQL endpoint, credential, and external location names."
     type: "string"
     ui_control: "text"
+  ensure_storage_credential_self_assume:
+    label: "Ensure UC Self-Assume Trust"
+    description: "Update IAM role trust for Unity Catalog storage credential self-assume before external location."
+    type: "bool"
+    ui_control: "select"
 
 layouts:
   - name: default
