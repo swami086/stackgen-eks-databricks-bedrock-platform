@@ -1,0 +1,94 @@
+version: "1.0"
+
+representation:
+  side_panel:
+    label: "Bedrock KB + Agent"
+    icon: "aws-bedrock"
+  node:
+    label:
+      static: "Bedrock KB + Agent"
+      template: "${kb_name} / ${agent_name}"
+
+variables:
+  kb_name:
+    label: "Knowledge Base Name"
+    description: "Name of the native Bedrock Knowledge Base."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  agent_name:
+    label: "Agent Name"
+    description: "Name of the native Bedrock Agent."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  embedding_model_arn:
+    label: "Embedding Model ARN"
+    description: "ARN of the Titan (or other) embedding foundation model."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  foundation_model_id:
+    label: "Foundation Model ID"
+    description: "Claude (or other) model ID used by the Bedrock Agent."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  s3_bucket_arn:
+    label: "Knowledge Documents S3 ARN"
+    description: "S3 bucket ARN for KB document ingestion."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  opensearch_domain_arn:
+    label: "OpenSearch Domain ARN"
+    description: "Managed OpenSearch domain ARN used as the vector store."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  opensearch_domain_endpoint:
+    label: "OpenSearch Domain Endpoint"
+    description: "HTTPS endpoint of the managed OpenSearch domain."
+    type: "string"
+    ui_control: "text"
+    validation:
+      required: true
+  region:
+    label: "Region"
+    description: "AWS region for Bedrock Agent and Knowledge Base resources."
+    type: "string"
+    ui_control: "text"
+  agent_instruction:
+    label: "Agent Instruction"
+    description: "System instruction for the Bedrock Agent."
+    type: "string"
+    ui_control: "textarea"
+  tags:
+    label: "Tags"
+    description: "Optional tags for IAM roles."
+    type: "map(string)"
+    ui_control: "dictionary"
+
+variable_groups:
+  - label: "Required"
+    description: "Core Bedrock KB + Agent wiring"
+    variables:
+      - kb_name
+      - agent_name
+      - embedding_model_arn
+      - foundation_model_id
+      - s3_bucket_arn
+      - opensearch_domain_arn
+      - opensearch_domain_endpoint
+  - label: "Optional"
+    description: "Region, instruction, and tags"
+    variables:
+      - region
+      - agent_instruction
+      - tags
