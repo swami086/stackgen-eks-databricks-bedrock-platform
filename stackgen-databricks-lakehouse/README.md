@@ -33,10 +33,15 @@ module "lakehouse" {
 
 ## Environment secrets
 
-Set on StackGen environment profile:
+Set on StackGen **environment profile** (not in git). Full guide: [CONFIGURATION.md](../examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md)
 
-- `databricks_host`  
-- `databricks_token`  
+| Variable | Required |
+|----------|----------|
+| `databricks_host` | Yes (L3) |
+| `databricks_token` | Yes (L3, sensitive) |
+| `region` | Yes |
+
+Example template: `examples/eks-databricks-bedrock-layer-validation/config/env.example.tfvars`
 
 ## StackGen upload
 

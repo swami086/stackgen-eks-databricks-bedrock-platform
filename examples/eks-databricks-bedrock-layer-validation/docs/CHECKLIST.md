@@ -26,6 +26,16 @@ Appstack: **`eks-databricks-bedrock-layer-validation`**
 
 Catalog uploaded and canvas resources **rebound** off legacy template-only bindings.
 
+## Credentials (before Plan)
+
+See **[CONFIGURATION.md](./CONFIGURATION.md)** — at minimum set on environment profile:
+
+- [ ] `databricks_host` + `databricks_token` (not placeholders)
+- [ ] `region`
+- [ ] S3 state backend on profile
+- [ ] Runner IAM role + Bedrock model access
+- [ ] Bedrock module `additional_opensearch_data_access_principal_arns`
+
 ---
 
 ## Configuration locks

@@ -18,8 +18,12 @@ terraform/
 *.zip
 10018a84*/
 
-# OS / IDE
-.DS_Store
+# Local secrets — never commit
+terraform.tfvars
+*.auto.tfvars
+.env
+.env.*
+!.env.example
 .idea/
 .vscode/
 *.swp

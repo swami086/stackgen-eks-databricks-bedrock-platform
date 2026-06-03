@@ -150,6 +150,7 @@ Deep dive: [`docs/ARCHITECTURE.md`](examples/eks-databricks-bedrock-layer-valida
 | Create the stack | [`docs/CREATE.md`](examples/eks-databricks-bedrock-layer-validation/docs/CREATE.md) |
 | Destroy the stack | [`docs/DESTROY.md`](examples/eks-databricks-bedrock-layer-validation/docs/DESTROY.md) |
 | Pre-flight checklist | [`docs/CHECKLIST.md`](examples/eks-databricks-bedrock-layer-validation/docs/CHECKLIST.md) |
+| **Credentials & env vars** | [`docs/CONFIGURATION.md`](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md) |
 | Known gotchas | [`docs/GOTCHAS.md`](examples/eks-databricks-bedrock-layer-validation/docs/GOTCHAS.md) |
 
 **Example StackGen project:** `workshop-dharani`
@@ -183,7 +184,8 @@ stackgen-eks-databricks-bedrock-platform/
 ├── examples/
 │   └── eks-databricks-bedrock-layer-validation/
 │       ├── README.md                 # Project overview + diagrams
-│       ├── docs/                     # Create, destroy, checklist, gotchas
+│       ├── docs/                     # Create, destroy, checklist, config, gotchas
+│       ├── config/                   # env.example.tfvars (no secrets committed)
 │       └── diagrams/                 # Mermaid source (.mmd)
 └── README.md                         # This file
 ```
@@ -194,6 +196,8 @@ stackgen-eks-databricks-bedrock-platform/
 - StackGen project with OpenTofu runner and S3 remote state  
 - Databricks workspace + personal access token for Unity Catalog resources  
 - IAM permissions for EKS, VPC, S3, OpenSearch Serverless, Bedrock, IAM  
+
+**Configure all secrets and variables before first apply:** [CONFIGURATION.md](examples/eks-databricks-bedrock-layer-validation/docs/CONFIGURATION.md)
 
 ## License
 

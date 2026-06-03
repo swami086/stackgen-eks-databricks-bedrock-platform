@@ -10,10 +10,8 @@ Step-by-step guide to **provision** `eks-databricks-bedrock-layer-validation` on
 
 - [ ] StackGen project created (example: `workshop-dharani`)
 - [ ] Environment profile created (example: `swami_env`, region `us-east-1`)
+- [ ] **All credentials configured** — see **[CONFIGURATION.md](./CONFIGURATION.md)** (required before apply)
 - [ ] AWS credentials / deployer role configured for the runner (`Stackgen_1` or equivalent)
-- [ ] Databricks secrets on the environment profile:
-  - `databricks_host` — `https://<workspace>.cloud.databricks.com`
-  - `databricks_token` — PAT with UC admin or equivalent
 - [ ] Bedrock model access: Claude (inference) + Titan Embed Text v2 in target region
 
 ---

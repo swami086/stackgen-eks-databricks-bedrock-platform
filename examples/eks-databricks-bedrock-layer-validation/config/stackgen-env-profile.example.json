@@ -1,0 +1,26 @@
+{
+  "profileName": "<your-env>",
+  "description": "Example StackGen environment profile structure — set in UI or API",
+  "variables": {
+    "region": "us-east-1",
+    "databricks_host": "https://dbc-xxxxxxxx-xxxx.cloud.databricks.com",
+    "databricks_token": "<STORE_AS_SECRET — Databricks PAT>",
+    "medallion_lakehouse_bucket_name": "",
+    "knowledge_documents_bucket_name": "",
+    "mlflow_artifacts_bucket_name": ""
+  },
+  "stateBackend": {
+    "type": "S3",
+    "config": {
+      "bucket": "<account-id>-states",
+      "key": "<project>/<appstack>/<env>/terraform.tfstate",
+      "region": "us-west-2",
+      "encrypt": true
+    }
+  },
+  "notes": {
+    "awsAuth": "StackGen runner assumes IAM role (e.g. arn:aws:iam::<account>:role/Stackgen_1) — not stored in this JSON",
+    "bedrockModels": "Enable Claude + Titan Embed in AWS Bedrock console for var.region",
+    "ossPrincipal": "Set additional_opensearch_data_access_principal_arns on Bedrock canvas resource to deployer role ARN"
+  }
+}

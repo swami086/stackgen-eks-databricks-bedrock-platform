@@ -223,10 +223,13 @@ Source: this repo (`main` branch or tagged release).
 
 | Action | Doc |
 |--------|-----|
+| **Configure secrets & env vars** | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
 | **Create** | [docs/CREATE.md](docs/CREATE.md) |
 | **Destroy** | [docs/DESTROY.md](docs/DESTROY.md) |
 | **Every run** | [docs/CHECKLIST.md](docs/CHECKLIST.md) |
 | **Failures** | [docs/GOTCHAS.md](docs/GOTCHAS.md) |
+
+Template: copy [`config/env.example.tfvars`](config/env.example.tfvars) — never commit real tokens.
 
 ## What is *not* in Terraform state
 
