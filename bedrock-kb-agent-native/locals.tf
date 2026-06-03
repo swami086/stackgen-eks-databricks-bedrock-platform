@@ -12,14 +12,20 @@ locals {
   # ARN format: arn:aws:es:region:account:domain/domain-name
   opensearch_domain_name = element(split("/", var.opensearch_domain_arn), 1)
 
+  opensearch_endpoint_override = trimspace(var.opensearch_domain_endpoint)
+  opensearch_use_derived_endpoint = (
+    local.opensearch_endpoint_override == ""
+    || lower(local.opensearch_endpoint_override) == "auto"
+  )
+
   opensearch_domain_endpoint = (
-    trimspace(var.opensearch_domain_endpoint) != ""
-    ? (
-      startswith(trimspace(var.opensearch_domain_endpoint), "https://")
-      ? trimspace(var.opensearch_domain_endpoint)
-      : "https://${trimspace(var.opensearch_domain_endpoint)}"
+    local.opensearch_use_derived_endpoint
+    ? "https://${data.aws_opensearch_domain.selected.endpoint}"
+    : (
+      startswith(local.opensearch_endpoint_override, "https://")
+      ? local.opensearch_endpoint_override
+      : "https://${local.opensearch_endpoint_override}"
     )
-    : "https://${data.aws_opensearch_domain.selected.endpoint}"
   )
 
   common_tags = merge(
