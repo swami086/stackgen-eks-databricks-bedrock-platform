@@ -2,8 +2,8 @@
 
 locals {
   oss_collection_id = local.use_serverless ? (
-    trimspace(var.opensearch_collection_arn) != ""
-    ? element(split("/", var.opensearch_collection_arn), length(split("/", var.opensearch_collection_arn)) - 1)
+    local.opensearch_collection_arn_input != ""
+    ? element(split("/", local.opensearch_collection_arn_input), length(split("/", local.opensearch_collection_arn_input)) - 1)
     : aws_opensearchserverless_collection.vector[0].id
   ) : ""
 

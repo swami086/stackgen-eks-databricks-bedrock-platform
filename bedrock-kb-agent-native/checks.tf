@@ -11,9 +11,9 @@ check "managed_cluster_requires_domain_arn" {
 check "serverless_collection_name_when_external_arn" {
   assert {
     condition = (
-      trimspace(var.opensearch_collection_arn) == ""
-      || trimspace(var.opensearch_serverless_collection_name) != ""
+      local.opensearch_collection_arn_input == ""
+      || length(local.oss_collection_name) >= 3
     )
-    error_message = "opensearch_serverless_collection_name is required when opensearch_collection_arn is set (for data access policy resource names)."
+    error_message = "opensearch_serverless_collection_name (or kb_name for default {kb_name}-vec) is required when using an existing OpenSearch Serverless collection ARN."
   }
 }

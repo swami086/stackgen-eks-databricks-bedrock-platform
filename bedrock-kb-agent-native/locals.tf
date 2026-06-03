@@ -24,16 +24,27 @@ locals {
     32,
   )
 
+  # StackGen template 1.0.0 only codegen's opensearch_domain_arn — accept an AOSS collection ARN there.
+  opensearch_collection_arn_input = (
+    trimspace(var.opensearch_collection_arn) != ""
+    ? trimspace(var.opensearch_collection_arn)
+    : (
+      can(regex("^arn:aws:aoss:", trimspace(var.opensearch_domain_arn)))
+      ? trimspace(var.opensearch_domain_arn)
+      : ""
+    )
+  )
+
   create_serverless_collection = (
     local.use_serverless
-    && trimspace(var.opensearch_collection_arn) == ""
+    && local.opensearch_collection_arn_input == ""
   )
 
   opensearch_collection_arn = (
     local.use_serverless
     ? (
-      trimspace(var.opensearch_collection_arn) != ""
-      ? trimspace(var.opensearch_collection_arn)
+      local.opensearch_collection_arn_input != ""
+      ? local.opensearch_collection_arn_input
       : aws_opensearchserverless_collection.vector[0].arn
     )
     : ""

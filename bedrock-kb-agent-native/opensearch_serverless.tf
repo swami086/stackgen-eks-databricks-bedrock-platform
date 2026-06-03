@@ -89,8 +89,5 @@ resource "aws_opensearchserverless_access_policy" "bedrock_kb" {
     )))
   }])
 
-  depends_on = [
-    aws_iam_role.knowledge_base,
-    aws_opensearchserverless_collection.vector,
-  ]
+  depends_on = [aws_iam_role.knowledge_base]
 }
