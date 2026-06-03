@@ -60,6 +60,7 @@ resource "aws_iam_role_policy" "knowledge_base" {
         Action = [
           "es:DescribeDomain",
           "es:DescribeDomains",
+          "es:DescribeElasticsearchDomain",
           "es:ESHttpGet",
           "es:ESHttpPut",
           "es:ESHttpPost",
