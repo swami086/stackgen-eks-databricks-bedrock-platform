@@ -51,25 +51,34 @@ resource "aws_opensearchserverless_access_policy" "bedrock_kb" {
 
   policy = jsonencode([{
     Description = "Bedrock Knowledge Base role data access"
-    Rules = [{
-      Resource = [
-        "collection/${local.oss_collection_name}",
-      ]
-      Permission = [
-        "aoss:CreateCollectionItems",
-        "aoss:DeleteCollectionItems",
-        "aoss:UpdateCollectionItems",
-        "aoss:DescribeCollectionItems",
-        "aoss:RestoreCollectionItems",
-        "aoss:CreateIndex",
-        "aoss:DeleteIndex",
-        "aoss:UpdateIndex",
-        "aoss:DescribeIndex",
-        "aoss:ReadDocument",
-        "aoss:WriteDocument",
-      ]
-      ResourceType = "collection"
-    }]
+    Rules = [
+      {
+        Resource = [
+          "collection/${local.oss_collection_name}",
+        ]
+        Permission = [
+          "aoss:CreateCollectionItems",
+          "aoss:DeleteCollectionItems",
+          "aoss:UpdateCollectionItems",
+          "aoss:DescribeCollectionItems",
+        ]
+        ResourceType = "collection"
+      },
+      {
+        Resource = [
+          "index/${local.oss_collection_name}/*",
+        ]
+        Permission = [
+          "aoss:CreateIndex",
+          "aoss:DeleteIndex",
+          "aoss:UpdateIndex",
+          "aoss:DescribeIndex",
+          "aoss:ReadDocument",
+          "aoss:WriteDocument",
+        ]
+        ResourceType = "index"
+      },
+    ]
     Principal = [
       aws_iam_role.knowledge_base.arn,
     ]
