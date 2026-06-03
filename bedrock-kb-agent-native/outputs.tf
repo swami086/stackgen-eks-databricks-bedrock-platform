@@ -42,3 +42,8 @@ output "knowledge_base_role_arn" {
   description = "IAM role ARN used by the Bedrock Knowledge Base"
   value       = aws_iam_role.knowledge_base.arn
 }
+
+output "opensearch_domain_endpoint" {
+  description = "Resolved OpenSearch domain endpoint used by the Knowledge Base"
+  value       = local.opensearch_domain_endpoint
+}

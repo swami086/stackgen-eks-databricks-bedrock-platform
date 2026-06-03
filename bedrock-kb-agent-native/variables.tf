@@ -60,13 +60,15 @@ variable "opensearch_domain_arn" {
 }
 
 variable "opensearch_domain_endpoint" {
-  description = "HTTPS endpoint of the managed OpenSearch domain (hostname only or full URL)"
+  description = "Optional OpenSearch HTTPS endpoint override. When empty, derived from opensearch_domain_arn via data.aws_opensearch_domain."
   type        = string
+  default     = ""
+}
 
-  validation {
-    condition     = length(trimspace(var.opensearch_domain_endpoint)) > 0
-    error_message = "opensearch_domain_endpoint must not be empty."
-  }
+variable "manage_opensearch_domain_access_policy" {
+  description = "Attach OpenSearch domain access policy for the KB IAM role. Set OpenSearch enable_access_policies=false in StackGen to avoid policy conflicts."
+  type        = bool
+  default     = true
 }
 
 variable "region" {

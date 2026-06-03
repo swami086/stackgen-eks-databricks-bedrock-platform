@@ -95,7 +95,7 @@ resource "aws_bedrockagent_knowledge_base" "this" {
 
     opensearch_managed_cluster_configuration {
       domain_arn      = var.opensearch_domain_arn
-      domain_endpoint = var.opensearch_domain_endpoint
+      domain_endpoint = local.opensearch_domain_endpoint
 
       field_mapping {
         vector_field   = "bedrock-knowledge-base-default-vector"
@@ -103,7 +103,7 @@ resource "aws_bedrockagent_knowledge_base" "this" {
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
 
-      vector_index_name = "bedrock-knowledge-base-default-index"
+      vector_index_name = local.vector_index_name
     }
   }
 

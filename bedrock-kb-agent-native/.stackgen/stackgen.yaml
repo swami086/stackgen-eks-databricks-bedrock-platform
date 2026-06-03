@@ -1,4 +1,4 @@
-version: "1.0.3"
+version: "1.0.4"
 
 representation:
   side_panel:
@@ -53,11 +53,14 @@ variables:
       required: true
   opensearch_domain_endpoint:
     label: "OpenSearch Domain Endpoint"
-    description: "HTTPS endpoint of the managed OpenSearch domain."
+    description: "Optional HTTPS endpoint override. Leave empty to derive from OpenSearch domain ARN after apply."
     type: "string"
     ui_control: "text"
-    validation:
-      required: true
+  manage_opensearch_domain_access_policy:
+    label: "Manage OpenSearch Domain Access Policy"
+    description: "When true, grants the KB IAM role access via domain resource policy. Disable OpenSearch enable_access_policies in StackGen."
+    type: "bool"
+    ui_control: "select"
   region:
     label: "Region"
     description: "AWS region for Bedrock Agent and Knowledge Base resources."
@@ -87,10 +90,11 @@ layouts:
           - foundation_model_id
           - s3_bucket_arn
           - opensearch_domain_arn
-          - opensearch_domain_endpoint
       - type: section
         label: Optional
         attributes:
+          - opensearch_domain_endpoint
+          - manage_opensearch_domain_access_policy
           - region
           - agent_instruction
           - tags
@@ -105,10 +109,11 @@ variable_groups:
       - foundation_model_id
       - s3_bucket_arn
       - opensearch_domain_arn
-      - opensearch_domain_endpoint
   - label: "Optional"
-    description: "Region, instruction, and tags"
+    description: "Endpoint override, OpenSearch policy, region, instruction, tags"
     variables:
+      - opensearch_domain_endpoint
+      - manage_opensearch_domain_access_policy
       - region
       - agent_instruction
       - tags
