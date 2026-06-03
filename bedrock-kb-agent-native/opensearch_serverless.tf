@@ -79,10 +79,10 @@ resource "aws_opensearchserverless_access_policy" "bedrock_kb" {
         ResourceType = "index"
       },
     ]
+    # Use stable IAM role/user ARN only — omit ephemeral sts:AssumeRole session ARNs to avoid plan drift.
     Principal = distinct(compact(concat(
       [
         aws_iam_role.knowledge_base.arn,
-        local.deployer_arn,
         local.deployer_iam_role_arn,
       ],
       var.additional_opensearch_data_access_principal_arns,

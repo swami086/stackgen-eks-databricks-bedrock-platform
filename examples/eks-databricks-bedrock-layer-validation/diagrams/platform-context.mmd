@@ -1,0 +1,50 @@
+%% Platform context — StackGen + four planes
+flowchart TB
+  subgraph stackgen["StackGen control plane"]
+    SG_UI["Topology / IaC UI"]
+    SG_POL["Policy engine · 0 violations target"]
+    SG_PLAN["OpenTofu plan / apply / destroy"]
+    SG_CAT["Module catalog<br/>bedrock-kb-agent-native · stackgen-databricks-lakehouse"]
+    SG_UI --> SG_POL --> SG_PLAN
+    SG_CAT --> SG_UI
+  end
+
+  subgraph users["Users"]
+    WEB["Web / API clients"]
+    ANALYSTS["Data scientists"]
+    BIZ["Business users"]
+  end
+
+  subgraph eks_plane["L2 — EKS application plane"]
+    INGRESS["Helm Ingress"]
+    APPS["Helm Workloads"]
+    INGRESS --> APPS
+  end
+
+  subgraph data_plane["L3 — Databricks data plane"]
+    DBX_UC["Unity Catalog"]
+    DBX_SPARK["Spark / Delta on S3"]
+    DBX_UC --> DBX_SPARK
+  end
+
+  subgraph ai_plane["L4 — Amazon Bedrock AI plane"]
+    BEDROCK["bedrock-kb-agent-native<br/>KB + Agent + OSS vectors"]
+    FM["Claude + Titan Embed"]
+    BEDROCK --> FM
+  end
+
+  subgraph aws_core["L1 — AWS foundation"]
+    NET["VPC · NAT · endpoints"]
+    STORE["S3 medallion · docs · mlflow"]
+    IAM["IAM · IRSA · UC role"]
+    NET --> STORE
+  end
+
+  WEB & ANALYSTS & BIZ --> INGRESS
+  APPS -->|InvokeAgent| BEDROCK
+  APPS --> DBX_SPARK
+  ANALYSTS --> DBX_UC
+  BEDROCK --> STORE
+  DBX_SPARK --> STORE
+  eks_plane & data_plane & ai_plane --> aws_core
+  stackgen -.->|manages| aws_core & eks_plane & data_plane & ai_plane

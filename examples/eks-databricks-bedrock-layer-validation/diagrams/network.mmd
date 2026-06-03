@@ -1,0 +1,29 @@
+%% VPC 10.30.0.0/16 — private EKS, NAT egress, VPC endpoints
+flowchart LR
+  subgraph internet["Internet"]
+    USERS["Users"]
+  end
+
+  subgraph vpc["VPC 10.30.0.0/16"]
+    subgraph pub["Public 10.30.0.0/24 · us-east-1a"]
+      IGW["Internet Gateway"]
+      NAT["NAT Gateway + EIP"]
+      IGW --- NAT
+    end
+
+    subgraph priv_a["Private 10.30.1.0/24 · us-east-1a"]
+      EKS_A["EKS nodes / CP ENIs"]
+    end
+
+    subgraph priv_b["Private 10.30.2.0/24 · us-east-1b"]
+      EKS_B["EKS nodes"]
+    end
+
+    VPCE["VPC endpoints<br/>Gateway: s3 · dynamodb<br/>Interface: ecr · sts · eks · bedrock"]
+  end
+
+  USERS -.->|443 via Ingress| EKS_A
+  pub --> NAT
+  NAT --> priv_a & priv_b
+  priv_a & priv_b --> VPCE
+  EKS_A & EKS_B -.->|AWS APIs| VPCE

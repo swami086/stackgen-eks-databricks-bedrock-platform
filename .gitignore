@@ -1,0 +1,25 @@
+# Terraform / OpenTofu
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local exports and scratch (not for publication)
+terraform_extracted/
+terraform_extracted2/
+terraform_extracted3/
+terraform_extracted4/
+terraform/
+*.zip
+10018a84*/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp

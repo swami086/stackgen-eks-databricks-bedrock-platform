@@ -1,0 +1,63 @@
+%% L1–L4 topology — OpenSearch Serverless for Bedrock KB (validated path)
+flowchart TB
+  subgraph tfvars["Inputs"]
+    VAR_REGION["var.region"]
+    VAR_DBX["var.databricks_host / token"]
+  end
+
+  subgraph L1["L1 aws_core"]
+    VPC["aws_vpc · 10.30.0.0/16"]
+    NAT["NAT + EIP"]
+    VPCE["VPC endpoints · s3 ddb ecr sts eks bedrock"]
+    S3L["S3 medallion + KMS"]
+    S3K["S3 knowledge docs + KMS"]
+    S3M["S3 mlflow + KMS"]
+    IAM_EKS["platform_iam_role"]
+    IAM_IRSA["platform_irsa_role"]
+    IAM_UC["databricks_uc_role"]
+    DDB["DynamoDB metadata"]
+    R53["Route53 private zone"]
+    VPC --> NAT & VPCE
+  end
+
+  subgraph L2["L2 eks_plane"]
+    EKS["aws_eks · platform_eks · private API"]
+    NG1["node group primary"]
+    NG2["node group secondary"]
+    NG3["node group tertiary"]
+    CNI["addon vpc-cni"]
+    PIA["addon eks-pod-identity-agent<br/>pod_identity_association = []"]
+    EKS --> NG1 & NG2 & NG3 & CNI & PIA
+  end
+
+  subgraph L3["L3 data_plane"]
+    DBX["stackgen-databricks-lakehouse"]
+    DBX --> IAM_UC & S3L & VAR_DBX
+  end
+
+  subgraph L4["L4 ai_plane"]
+    FM_I["data FM Claude"]
+    FM_E["data FM Titan embed"]
+    subgraph bedrock["bedrock-kb-agent-native v1.0.14+"]
+      OSS_POL["OSS security + data policies"]
+      OSS_COL["OSS VECTORSEARCH collection"]
+      OSS_IDX["opensearch_index"]
+      KB_ROLE["KB IAM role"]
+      KB["Knowledge Base"]
+      DS["S3 data source"]
+      AGT["Agent + alias"]
+      OSS_POL --> OSS_COL --> OSS_IDX --> KB
+      KB_ROLE --> KB --> DS
+      KB --> AGT
+    end
+    S3K --> DS
+    FM_I & FM_E --> bedrock
+    VAR_REGION --> bedrock
+  end
+
+  VPC --> EKS
+  IAM_EKS --> EKS & NG1 & NG2 & NG3
+  IAM_IRSA -.->|future Pod Identity| EKS
+
+  classDef mod fill:#3b1f6e,stroke:#a78bfa,color:#f3e8ff
+  class bedrock,DBX mod

@@ -1,4 +1,4 @@
-version: "1.0.13"
+version: "1.0.14"
 
 representation:
   side_panel:
@@ -99,7 +99,7 @@ variables:
     ui_control: "text"
   additional_opensearch_data_access_principal_arns:
     label: "Extra OSS Data Access Principals"
-    description: "Additional IAM ARNs for OpenSearch Serverless data policy (optional)."
+    description: "Stable IAM role ARNs for OpenSearch Serverless data policy (e.g. arn:aws:iam::ACCOUNT:role/Stackgen_1 for StackGen deployer)."
     type: "list(string)"
     ui_control: "text"
 
@@ -133,6 +133,8 @@ layouts:
           - region
           - agent_instruction
           - tags
+          - embedding_vector_dimension
+          - additional_opensearch_data_access_principal_arns
 
 variable_groups:
   - label: "Required"
