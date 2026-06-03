@@ -16,7 +16,7 @@ Terraform module for **Amazon Bedrock Knowledge Base + Agent** with **OpenSearch
 
 ```hcl
 module "bedrock" {
-  source = "git::https://github.com/swami086/terraform-aurora-patterns//bedrock-kb-agent-native?ref=main"
+  source = "git::https://github.com/swami086/stackgen-eks-databricks-bedrock-platform//bedrock-kb-agent-native?ref=main"
 
   kb_name                    = "platform_knowledge_base"
   agent_name                 = "platform_bedrock_agent"
@@ -57,7 +57,7 @@ module "bedrock" {
 stackgen upload custom-modules \
   --scope project \
   --name bedrock-kb-agent-native \
-  --repo-url https://github.com/swami086/terraform-aurora-patterns \
+  --repo-url https://github.com/swami086/stackgen-eks-databricks-bedrock-platform \
   --subdir bedrock-kb-agent-native \
   --version 1.0.14
 ```

@@ -26,14 +26,14 @@ From a machine with StackGen CLI:
 stackgen upload custom-modules \
   --scope project \
   --name bedrock-kb-agent-native \
-  --repo-url https://github.com/swami086/terraform-aurora-patterns \
+  --repo-url https://github.com/swami086/stackgen-eks-databricks-bedrock-platform \
   --subdir bedrock-kb-agent-native \
   --version 1.0.14
 
 stackgen upload custom-modules \
   --scope project \
   --name stackgen-databricks-lakehouse \
-  --repo-url https://github.com/swami086/terraform-aurora-patterns \
+  --repo-url https://github.com/swami086/stackgen-eks-databricks-bedrock-platform \
   --subdir stackgen-databricks-lakehouse \
   --version 1.0.5
 ```

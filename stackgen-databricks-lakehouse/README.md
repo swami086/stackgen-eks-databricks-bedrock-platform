@@ -14,7 +14,7 @@ Terraform module for **Databricks Unity Catalog** integration with an S3 medalli
 
 ```hcl
 module "lakehouse" {
-  source = "git::https://github.com/swami086/terraform-aurora-patterns//stackgen-databricks-lakehouse?ref=main"
+  source = "git::https://github.com/swami086/stackgen-eks-databricks-bedrock-platform//stackgen-databricks-lakehouse?ref=main"
 
   databricks_host  = var.databricks_host
   databricks_token = var.databricks_token
@@ -44,7 +44,7 @@ Set on StackGen environment profile:
 stackgen upload custom-modules \
   --scope project \
   --name stackgen-databricks-lakehouse \
-  --repo-url https://github.com/swami086/terraform-aurora-patterns \
+  --repo-url https://github.com/swami086/stackgen-eks-databricks-bedrock-platform \
   --subdir stackgen-databricks-lakehouse \
   --version 1.0.5
 ```

@@ -1,4 +1,4 @@
-# terraform-aurora-patterns
+# stackgen-eks-databricks-bedrock-platform
 
 Terraform modules and a **reference architecture** for running a four-plane AWS platform on [StackGen](https://stackgen.com):
 
@@ -167,7 +167,7 @@ Upload to StackGen (project scope):
 stackgen upload custom-modules \
   --scope project \
   --name bedrock-kb-agent-native \
-  --repo-url https://github.com/swami086/terraform-aurora-patterns \
+  --repo-url https://github.com/swami086/stackgen-eks-databricks-bedrock-platform \
   --subdir bedrock-kb-agent-native \
   --version 1.0.14
 ```
@@ -177,7 +177,7 @@ Repeat for `stackgen-databricks-lakehouse` at version `1.0.5`.
 ## Repository layout
 
 ```
-terraform-aurora-patterns/
+stackgen-eks-databricks-bedrock-platform/
 ├── bedrock-kb-agent-native/          # L4 — Bedrock KB + Agent + OSS
 ├── stackgen-databricks-lakehouse/    # L3 — Databricks UC wiring
 ├── examples/
@@ -197,4 +197,4 @@ terraform-aurora-patterns/
 
 ## License
 
-See upstream [`dharanistack/terraform-aurora-patterns`](https://github.com/dharanistack/terraform-aurora-patterns) for lineage. Module additions in this fork are provided as reference implementations for StackGen workshops.
+Forked from [`dharanistack/terraform-aurora-patterns`](https://github.com/dharanistack/terraform-aurora-patterns). Formerly published as `swami086/terraform-aurora-patterns`.
