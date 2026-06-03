@@ -43,7 +43,22 @@ output "knowledge_base_role_arn" {
   value       = aws_iam_role.knowledge_base.arn
 }
 
+output "opensearch_collection_arn" {
+  description = "OpenSearch Serverless collection ARN used by the Knowledge Base"
+  value       = local.use_serverless ? local.opensearch_collection_arn : null
+}
+
+output "opensearch_collection_name" {
+  description = "OpenSearch Serverless collection name"
+  value       = local.use_serverless ? local.oss_collection_name : null
+}
+
 output "opensearch_domain_endpoint" {
-  description = "Resolved OpenSearch domain endpoint used by the Knowledge Base"
+  description = "Resolved managed OpenSearch domain endpoint (managed cluster mode only)"
   value       = local.opensearch_domain_endpoint
+}
+
+output "vector_store_type" {
+  description = "Vector store type configured for the Knowledge Base"
+  value       = var.vector_store_type
 }

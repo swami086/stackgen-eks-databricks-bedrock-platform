@@ -33,45 +33,62 @@ resource "aws_iam_role_policy" "knowledge_base" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "InvokeEmbeddingModel"
-        Effect = "Allow"
-        Action = [
-          "bedrock:InvokeModel"
-        ]
-        Resource = [var.embedding_model_arn]
-      },
-      {
-        Sid    = "ReadKnowledgeDocuments"
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          var.s3_bucket_arn,
-          "${var.s3_bucket_arn}/*"
-        ]
-      },
-      {
-        Sid    = "OpenSearchManagedCluster"
-        Effect = "Allow"
-        Action = [
-          "es:DescribeDomain",
-          "es:DescribeDomains",
-          "es:DescribeElasticsearchDomain",
-          "es:ESHttpGet",
-          "es:ESHttpPut",
-          "es:ESHttpPost",
-          "es:ESHttpDelete"
-        ]
-        Resource = [
-          var.opensearch_domain_arn,
-          "${var.opensearch_domain_arn}/*"
-        ]
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Sid    = "InvokeEmbeddingModel"
+          Effect = "Allow"
+          Action = [
+            "bedrock:InvokeModel"
+          ]
+          Resource = [var.embedding_model_arn]
+        },
+        {
+          Sid    = "ReadKnowledgeDocuments"
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject",
+            "s3:ListBucket"
+          ]
+          Resource = [
+            var.s3_bucket_arn,
+            "${var.s3_bucket_arn}/*"
+          ]
+        },
+      ],
+      local.use_serverless ? [
+        {
+          Sid    = "OpenSearchServerlessCollection"
+          Effect = "Allow"
+          Action = [
+            "aoss:APIAccessAll"
+          ]
+          Resource = [
+            local.opensearch_collection_arn,
+            "${local.opensearch_collection_arn}/*",
+          ]
+        },
+      ] : [],
+      local.use_managed ? [
+        {
+          Sid    = "OpenSearchManagedCluster"
+          Effect = "Allow"
+          Action = [
+            "es:DescribeDomain",
+            "es:DescribeDomains",
+            "es:DescribeElasticsearchDomain",
+            "es:ESHttpGet",
+            "es:ESHttpPut",
+            "es:ESHttpPost",
+            "es:ESHttpDelete"
+          ]
+          Resource = [
+            var.opensearch_domain_arn,
+            "${var.opensearch_domain_arn}/*"
+          ]
+        },
+      ] : [],
+    )
   })
 }
 
@@ -92,25 +109,47 @@ resource "aws_bedrockagent_knowledge_base" "this" {
   }
 
   storage_configuration {
-    type = "OPENSEARCH_MANAGED_CLUSTER"
+    type = var.vector_store_type
 
-    opensearch_managed_cluster_configuration {
-      domain_arn      = var.opensearch_domain_arn
-      domain_endpoint = local.opensearch_domain_endpoint
+    dynamic "opensearch_serverless_configuration" {
+      for_each = local.use_serverless ? [1] : []
 
-      field_mapping {
-        vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
-        metadata_field = "AMAZON_BEDROCK_METADATA"
+      content {
+        collection_arn    = local.opensearch_collection_arn
+        vector_index_name = local.vector_index_name
+
+        field_mapping {
+          vector_field   = "bedrock-knowledge-base-default-vector"
+          text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+          metadata_field = "AMAZON_BEDROCK_METADATA"
+        }
       }
+    }
 
-      vector_index_name = local.vector_index_name
+    dynamic "opensearch_managed_cluster_configuration" {
+      for_each = local.use_managed ? [1] : []
+
+      content {
+        domain_arn      = var.opensearch_domain_arn
+        domain_endpoint = local.opensearch_domain_endpoint
+
+        field_mapping {
+          vector_field   = "bedrock-knowledge-base-default-vector"
+          text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+          metadata_field = "AMAZON_BEDROCK_METADATA"
+        }
+
+        vector_index_name = local.vector_index_name
+      }
     }
   }
 
   tags = local.common_tags
 
-  depends_on = [aws_iam_role_policy.knowledge_base]
+  depends_on = [
+    aws_iam_role_policy.knowledge_base,
+    aws_opensearchserverless_access_policy.bedrock_kb,
+  ]
 }
 
 resource "aws_bedrockagent_data_source" "s3" {

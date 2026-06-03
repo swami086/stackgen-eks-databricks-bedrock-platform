@@ -1,4 +1,4 @@
-version: "1.0.5"
+version: "1.0.6"
 
 representation:
   side_panel:
@@ -7,6 +7,7 @@ representation:
   node:
     label:
       static: "Bedrock KB + Agent"
+      template: "${kb_name} / ${agent_name}"
 
 variables:
   kb_name:
@@ -44,21 +45,36 @@ variables:
     ui_control: "text"
     validation:
       required: true
-  opensearch_domain_arn:
-    label: "OpenSearch Domain ARN"
-    description: "Managed OpenSearch domain ARN used as the vector store."
+  vector_store_type:
+    label: "Vector Store Type"
+    description: "OPENSEARCH_SERVERLESS (default, VPC-safe) or OPENSEARCH_MANAGED_CLUSTER (public domain only)."
     type: "string"
-    ui_control: "text"
+    ui_control: "select"
     validation:
       required: true
+  opensearch_serverless_collection_name:
+    label: "Serverless Collection Name"
+    description: "VECTORSEARCH collection name (optional; defaults to {kb_name}-vec)."
+    type: "string"
+    ui_control: "text"
+  opensearch_collection_arn:
+    label: "Serverless Collection ARN"
+    description: "Use an existing collection ARN to skip collection creation."
+    type: "string"
+    ui_control: "text"
+  opensearch_domain_arn:
+    label: "OpenSearch Domain ARN"
+    description: "Managed domain ARN — only when vector_store_type is OPENSEARCH_MANAGED_CLUSTER."
+    type: "string"
+    ui_control: "text"
   opensearch_domain_endpoint:
     label: "OpenSearch Domain Endpoint"
-    description: "Optional HTTPS endpoint override. Leave empty to derive from OpenSearch domain ARN after apply."
+    description: "Managed cluster only. Leave empty or auto to derive from domain ARN."
     type: "string"
     ui_control: "text"
   manage_opensearch_domain_access_policy:
     label: "Manage OpenSearch Domain Access Policy"
-    description: "When true, grants the KB IAM role access via domain resource policy. Disable OpenSearch enable_access_policies in StackGen."
+    description: "Managed cluster only. Grants KB IAM role access via domain policy."
     type: "bool"
     ui_control: "select"
   region:
@@ -89,12 +105,21 @@ layouts:
           - embedding_model_arn
           - foundation_model_id
           - s3_bucket_arn
+          - vector_store_type
+      - type: section
+        label: OpenSearch Serverless
+        attributes:
+          - opensearch_serverless_collection_name
+          - opensearch_collection_arn
+      - type: section
+        label: Managed OpenSearch (legacy)
+        attributes:
           - opensearch_domain_arn
+          - opensearch_domain_endpoint
+          - manage_opensearch_domain_access_policy
       - type: section
         label: Optional
         attributes:
-          - opensearch_domain_endpoint
-          - manage_opensearch_domain_access_policy
           - region
           - agent_instruction
           - tags
@@ -108,12 +133,21 @@ variable_groups:
       - embedding_model_arn
       - foundation_model_id
       - s3_bucket_arn
-      - opensearch_domain_arn
-  - label: "Optional"
-    description: "Endpoint override, OpenSearch policy, region, instruction, tags"
+      - vector_store_type
+  - label: "OpenSearch Serverless"
+    description: "Default vector store for VPC platforms"
     variables:
+      - opensearch_serverless_collection_name
+      - opensearch_collection_arn
+  - label: "Managed OpenSearch (legacy)"
+    description: "Public managed domain only"
+    variables:
+      - opensearch_domain_arn
       - opensearch_domain_endpoint
       - manage_opensearch_domain_access_policy
+  - label: "Optional"
+    description: "Region, instruction, tags"
+    variables:
       - region
       - agent_instruction
       - tags

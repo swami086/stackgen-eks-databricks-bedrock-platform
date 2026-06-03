@@ -2,7 +2,7 @@
 # Set enable_access_policies=false on the OpenSearch resource to avoid duplicate aws_opensearch_domain_policy.
 
 data "aws_iam_policy_document" "opensearch_kb_access" {
-  count = var.manage_opensearch_domain_access_policy ? 1 : 0
+  count = local.use_managed && var.manage_opensearch_domain_access_policy ? 1 : 0
 
   statement {
     sid    = "BedrockKBRoleDomainAccess"
@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "opensearch_kb_access" {
 }
 
 resource "aws_opensearch_domain_policy" "bedrock_kb" {
-  count           = var.manage_opensearch_domain_access_policy ? 1 : 0
+  count           = local.use_managed && var.manage_opensearch_domain_access_policy ? 1 : 0
   domain_name     = local.opensearch_domain_name
   access_policies = data.aws_iam_policy_document.opensearch_kb_access[0].json
 

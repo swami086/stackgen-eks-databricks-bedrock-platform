@@ -49,26 +49,45 @@ variable "kb_name" {
   }
 }
 
-variable "opensearch_domain_arn" {
-  description = "ARN of the managed OpenSearch domain used as the vector store"
+variable "vector_store_type" {
+  description = "Vector store for the Knowledge Base. OPENSEARCH_SERVERLESS (default) works with VPC platforms; OPENSEARCH_MANAGED_CLUSTER requires a public OpenSearch domain."
   type        = string
+  default     = "OPENSEARCH_SERVERLESS"
 
   validation {
-    condition     = can(regex("^arn:aws[a-z-]*:es:", var.opensearch_domain_arn))
-    error_message = "opensearch_domain_arn must be an Amazon OpenSearch Service domain ARN."
+    condition     = contains(["OPENSEARCH_SERVERLESS", "OPENSEARCH_MANAGED_CLUSTER"], var.vector_store_type)
+    error_message = "vector_store_type must be OPENSEARCH_SERVERLESS or OPENSEARCH_MANAGED_CLUSTER."
   }
 }
 
+variable "opensearch_serverless_collection_name" {
+  description = "OpenSearch Serverless VECTORSEARCH collection name (3-32 lowercase chars). Defaults to {kb_name}-vec when empty."
+  type        = string
+  default     = ""
+}
+
+variable "opensearch_collection_arn" {
+  description = "Existing OpenSearch Serverless collection ARN. When set, skips collection and security policy creation."
+  type        = string
+  default     = ""
+}
+
+variable "opensearch_domain_arn" {
+  description = "Managed OpenSearch domain ARN. Required only when vector_store_type is OPENSEARCH_MANAGED_CLUSTER."
+  type        = string
+  default     = ""
+}
+
 variable "opensearch_domain_endpoint" {
-  description = "Optional OpenSearch HTTPS endpoint override. When empty, derived from opensearch_domain_arn via data.aws_opensearch_domain."
+  description = "Optional managed OpenSearch HTTPS endpoint override. When empty, derived from opensearch_domain_arn."
   type        = string
   default     = ""
 }
 
 variable "manage_opensearch_domain_access_policy" {
-  description = "Attach OpenSearch domain access policy for the KB IAM role. Set OpenSearch enable_access_policies=false in StackGen to avoid policy conflicts."
+  description = "Attach managed OpenSearch domain access policy for the KB IAM role (managed cluster only)."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "region" {
