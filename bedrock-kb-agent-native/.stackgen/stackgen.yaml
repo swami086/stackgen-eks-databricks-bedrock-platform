@@ -6,8 +6,7 @@ representation:
     icon: "aws-bedrock"
   node:
     label:
-      static: "Bedrock KB + Agent"
-      template: "${kb_name} / ${agent_name}"
+      template: "Bedrock — ${kb_name}"
 
 variables:
   kb_name:
@@ -74,6 +73,27 @@ variables:
     description: "Optional tags for IAM roles."
     type: "map(string)"
     ui_control: "dictionary"
+
+layouts:
+  - name: default
+    label: Default
+    sections:
+      - type: section
+        label: Required
+        attributes:
+          - kb_name
+          - agent_name
+          - embedding_model_arn
+          - foundation_model_id
+          - s3_bucket_arn
+          - opensearch_domain_arn
+          - opensearch_domain_endpoint
+      - type: section
+        label: Optional
+        attributes:
+          - region
+          - agent_instruction
+          - tags
 
 variable_groups:
   - label: "Required"
