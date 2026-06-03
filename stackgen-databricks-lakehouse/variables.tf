@@ -49,3 +49,9 @@ variable "name_prefix" {
     error_message = "name_prefix must be 1-32 characters (letters, numbers, hyphen, underscore)."
   }
 }
+
+variable "ensure_storage_credential_self_assume" {
+  description = "Update the storage credential IAM role trust policy to include Unity Catalog self-assume before creating the external location."
+  type        = bool
+  default     = true
+}

@@ -71,4 +71,22 @@ locals {
     },
     var.tags,
   )
+
+  # StackGen/OpenTofu often runs via sts:AssumeRole; AOSS data policies need the stable IAM role ARN.
+  deployer_arn              = data.aws_caller_identity.current.arn
+  deployer_is_assumed_role  = startswith(local.deployer_arn, "arn:aws:sts:")
+  deployer_iam_role_arn = (
+    local.deployer_is_assumed_role
+    ? "arn:aws:iam::${local.account_id}:role/${element(split("/", local.deployer_arn), 1)}"
+    : local.deployer_arn
+  )
+
+  oss_data_access_principals = distinct(compact(concat(
+    [
+      aws_iam_role.knowledge_base.arn,
+      local.deployer_arn,
+      local.deployer_iam_role_arn,
+    ],
+    var.additional_opensearch_data_access_principal_arns,
+  )))
 }

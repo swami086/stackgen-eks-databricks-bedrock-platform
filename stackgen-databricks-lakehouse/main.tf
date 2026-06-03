@@ -21,4 +21,8 @@ resource "databricks_external_location" "lakehouse" {
   url             = "s3://${var.lakehouse_bucket}"
   credential_name = databricks_storage_credential.lakehouse_s3.name
   comment         = "Lakehouse root external location"
+
+  depends_on = [
+    terraform_data.ensure_storage_credential_self_assume,
+  ]
 }

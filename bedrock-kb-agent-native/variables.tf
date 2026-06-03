@@ -127,3 +127,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "additional_opensearch_data_access_principal_arns" {
+  description = "Extra IAM principal ARNs for the OpenSearch Serverless data access policy (e.g. StackGen deployer role)."
+  type        = list(string)
+  default     = []
+}

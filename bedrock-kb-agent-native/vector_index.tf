@@ -63,5 +63,16 @@ resource "opensearch_index" "bedrock_kb" {
 
   depends_on = [
     aws_opensearchserverless_access_policy.bedrock_kb,
+    time_sleep.oss_data_policy_settle,
+  ]
+}
+
+resource "time_sleep" "oss_data_policy_settle" {
+  count = local.use_serverless ? 1 : 0
+
+  create_duration = "60s"
+
+  depends_on = [
+    aws_opensearchserverless_access_policy.bedrock_kb,
   ]
 }
