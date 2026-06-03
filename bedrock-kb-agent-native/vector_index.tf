@@ -54,6 +54,13 @@ resource "opensearch_index" "bedrock_kb" {
     }
   })
 
+  lifecycle {
+    precondition {
+      condition     = local.use_serverless
+      error_message = "opensearch_index is only created for OPENSEARCH_SERVERLESS."
+    }
+  }
+
   depends_on = [
     aws_opensearchserverless_access_policy.bedrock_kb,
   ]
